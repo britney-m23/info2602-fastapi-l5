@@ -14,6 +14,8 @@ authors = [
 dependencies = [
     "fastapi[standard]",
     "httpx",
+    "itsdangerous",
+    "jinja2",
     "pwdlib[argon2]",
     "pyjwt",
     "pytest-asyncio",

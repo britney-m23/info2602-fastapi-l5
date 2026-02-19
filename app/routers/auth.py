@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import select
 from app.database import SessionDep
 from app.models import *
@@ -6,6 +6,8 @@ from app.auth import encrypt_password, verify_password, create_access_token, Aut
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from fastapi import status
+from . import templates
+from fastapi.responses import HTMLResponse
 
 auth_router = APIRouter(tags=["Authentication"])
 
@@ -53,3 +55,11 @@ def signup_user(user_data: UserCreate, db:SessionDep):
                 detail="Username or email already exists",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+
+@auth_router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="login.html",
+    )
