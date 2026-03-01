@@ -46,21 +46,32 @@ async def get_current_user(request:Request, db:SessionDep)->User:
     if auth_header and auth_header.startswith("Bearer "): # Regular auth
         token = auth_header.split(" ")[1]
     elif auth_cookie: # Web auth
-        token = auth_cookie.split(" ")[1]
+        token_parts = auth_cookie.split(" ")
+        if len(token_parts) == 2:
+            token = token_parts[1]
     try:
+        if not token:
+            print("DEBUG: No token found")
+            raise credentials_exception
+        print(f"DEBUG: Token extracted: {token[:20]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub",None)
         user_role = payload.get("role", None)
         if user_id is None or user_role is None:
+            print(f"DEBUG: Missing user_id or user_role. user_id={user_id}, user_role={user_role}")
             raise credentials_exception
-    except InvalidTokenError:
+    except InvalidTokenError as e:
+        print(f"DEBUG: InvalidTokenError - {e}")
+        raise credentials_exception
+    except Exception as e:
+        print(f"DEBUG: Unexpected error - {type(e).__name__}: {e}")
         raise credentials_exception
     user = None
 
     if user_role == "admin":
-        user = db.get(Admin,user_id)
+        user = db.get(Admin, int(user_id))
     else:
-        user = db.get(User,user_id)
+        user = db.get(User, int(user_id))
     if user is None:
         raise credentials_exception
     return user
